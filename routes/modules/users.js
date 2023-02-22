@@ -5,7 +5,7 @@ const passport = require('passport')
 const bcrypt = require('bcryptjs')
 
 router.get('/login', (req, res) => {
-  res.render('login')
+  return res.render('login')
 })
 
 router.post('/login', passport.authenticate('local', {
@@ -14,36 +14,32 @@ router.post('/login', passport.authenticate('local', {
 }))
 
 router.get('/register', (req, res) => {
-  res.render('register')
+  return res.render('register')
 })
 
-router.post('/register', (req, res) => {
+router.post('/register', (req, res, next) => {
   const { name, email, password, confirmPassword } = req.body
-  User.findOne({ where: { email } }).then(user => {
-    if (user) {
-      console.log('User already exists')
-      return res.render('register', {
-        name,
-        email,
-        password,
-        confirmPassword
-      })
-    }
-    return bcrypt
-      .genSalt(10)
-      .then(salt => bcrypt.hash(password, salt))
-      .then(hash => User.create({
-        name,
-        email,
-        password: hash
-      }))
-      .then(() => res.redirect('/'))
-      .catch(err => console.log(err))
-  })
+  return User.findOne({ where: { email } })
+    .then(user => {
+      if (user) throw new Error('User already exists')
+      return bcrypt
+        .genSalt(10)
+        .then(salt => bcrypt.hash(password, salt))
+        .then(hash => User.create({
+          name,
+          email,
+          password: hash
+        }))
+        .then(() => res.redirect('/'))
+        .catch(err => next(err))
+    })
+    .catch(err => next(err))
 })
 
 router.get('/logout', (req, res) => {
   req.logout()
+  req.flash('success', 'successfully logout!')
+  return res.redirect('/users/login')
 })
 
 module.exports = router
