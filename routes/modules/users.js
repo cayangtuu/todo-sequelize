@@ -19,9 +19,11 @@ router.get('/register', (req, res) => {
 
 router.post('/register', (req, res, next) => {
   const { name, email, password, confirmPassword } = req.body
+  if (!name || !email || !password || !confirmPassword) throw new Error(`所有欄位皆須填寫!`)
+  if (password !== confirmPassword) throw new Error(`密碼不相符!`)
   return User.findOne({ where: { email } })
     .then(user => {
-      if (user) throw new Error('User already exists')
+      if (user) throw new Error('帳號已註冊過了!')
       return bcrypt
         .genSalt(10)
         .then(salt => bcrypt.hash(password, salt))
@@ -31,14 +33,14 @@ router.post('/register', (req, res, next) => {
           password: hash
         }))
         .then(() => res.redirect('/'))
-        .catch(err => next(err))
+        .catch(next)
     })
-    .catch(err => next(err))
+    .catch(next)
 })
 
 router.get('/logout', (req, res) => {
   req.logout()
-  req.flash('success', 'successfully logout!')
+  req.flash('success_msg', '登出成功!')
   return res.redirect('/users/login')
 })
 

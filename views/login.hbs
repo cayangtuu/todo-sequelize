@@ -5,11 +5,11 @@
       {{> message}}
       <form action="/users/login" method="POST">
         <div class="mb-3">
-          <label for="email" class="form-label">Email</label>
+          <label for="email" class="form-label">Email<span style="color:red">*</span></label>
           <input type="email" id="email" name="email" class="form-control" placeholder="Enter Email">
         </div>
         <div class="mb-3">
-          <label for="password" class="form-label">Password</label>
+          <label for="password" class="form-label">Password<span style="color:red">*</span></label>
           <input type="password" id="password" name="password" class="form-control" placeholder="Enter Password">
         </div>
         <button type="submit" class="d-block w-100 mb-2 btn btn-primary">Login</button>
