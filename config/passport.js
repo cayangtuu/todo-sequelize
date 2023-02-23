@@ -8,21 +8,29 @@ const User = db.User
 module.exports = app => {
   app.use(passport.initialize())
   app.use(passport.session())
-  passport.use(new LocalStrategy({ usernameField: 'email' }, (email, password, done) => {
-    User.findOne({ where: { email } })
-      .then(user => {
-        if (!user) {
-          return done(null, false, { message: 'That email is not registered!' })
-        }
-        return bcrypt.compare(password, user.password).then(isMatch => {
-          if (!isMatch) {
-            return done(null, false, { message: 'Email or Password incorrect.' })
+  passport.use(new LocalStrategy(
+    {
+      usernameField: 'email',
+      passReqToCallback: true
+    },
+    (req, email, password, cb) => {
+      User.findOne({ where: { email } })
+        .then(user => {
+          if (!user) {
+            return cb(null, false, req.flash('err_msg', `使用者尚未註冊!`))
           }
-          return done(null, user)
+          return bcrypt.compare(password, user.password)
+            .then(isMatch => {
+              if (!isMatch) {
+                return cb(null, false, req.flash('err_msg', `帳號或密碼輸入錯誤!`))
+              }
+              return cb(null, user)
+            })
+            .catch(err => cb(err, false))
         })
-      })
-      .catch(err => done(err, false))
-  }))
+        .catch(err => cb(err, false))
+    }))
+
   passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_ID,
     clientSecret: process.env.FACEBOOK_SECRET,
@@ -44,6 +52,7 @@ module.exports = app => {
       .then(user => cb(null, user))
       .catch(err => cb(err, false))
   }))
+
   passport.serializeUser((user, done) => {
     done(null, user.id)
   })
